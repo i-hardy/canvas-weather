@@ -26,6 +26,7 @@ class Weather {
 
   drawSky () {
     this.setSky()
+    this.context.globalAlpha = 1.0
     this.context.fillStyle = this.skyColour()
     this.context.fillRect(0, 0, this.maxX, this.maxY)
     this.visibleSun()
@@ -34,23 +35,30 @@ class Weather {
 
   drawClouds () {
     var weather = this
+    weather.context.globalAlpha = this.cloudDensity()
     weather.context.fillStyle = this.cloudColour()
     for (var i = 0; i < weather.SKY_HEIGHT; i++) {
       for (var j = 0; j < weather.SKY_WIDTH; j++) {
-        if (weather.skyScape[i][j] === 0) {
-          weather.context.fillRect(j * (this.cloudSize * 2),
-                                   i * this.cloudSize,
-                                   weather.cloudSize * 2,
-                                   weather.cloudSize)
-        }
+        weather.drawOneCloud(i, j)
       }
+    }
+  }
+
+  drawOneCloud (i, j) {
+    if (this.skyScape[i][j] === 0) {
+      this.context.fillRect(j * (this.cloudSize * 2),
+                               i * this.cloudSize,
+                               this.cloudSize * 2,
+                               this.cloudSize)
     }
   }
 
   visibleSun () {
     if (this.isSunny) {
+      this.context.beginPath()
+      this.context.arc(this.maxX / 2, this.maxY / 2, 100, 0, 2 * Math.PI)
       this.context.fillStyle = 'yellow'
-      this.context.fillRect((this.maxX / 2) - 50, (this.maxY / 2) - 50, 100, 100)
+      this.context.fill()
     }
   }
 
@@ -65,6 +73,13 @@ class Weather {
     if (this.isSunny) {
       return 'white'
     }
-    return '#696969'
+    return '#808080'
+  }
+
+  cloudDensity () {
+    if (this.isSunny) {
+      return 0.8
+    }
+    return 0.2
   }
 }
