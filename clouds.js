@@ -1,56 +1,48 @@
 class Weather {
   constructor (context, maxX, maxY) {
-    this.cloudSize = 40
+    this.cloudSize = 80
     this.context = context
     this.maxX = maxX
     this.maxY = maxY
-    this.SKY_WIDTH = this.maxX / (this.cloudSize * 2)
-    this.SKY_HEIGHT = this.maxY / this.cloudSize
-    this.skyScape = []
     this.isSunny = (Math.floor(Math.random() * 2) + 1) === 2
   }
 
-  setSky () {
-    for (var i = 0; i < this.SKY_HEIGHT; i++) {
-      this.skyScape.push(this.setSkyRow())
-    }
-  }
-
-  setSkyRow () {
-    var row = []
-    for (var i = 0; i < this.SKY_WIDTH; i++) {
-      row.push(Math.floor(Math.random() * 5))
-    }
-    return row
-  }
-
   drawSky () {
-    this.setSky()
     this.context.globalAlpha = 1.0
     this.context.fillStyle = this.skyColour()
     this.context.fillRect(0, 0, this.maxX, this.maxY)
     this.visibleSun()
+    this.populateClouds()
     this.drawClouds()
+  }
+
+  populateClouds () {
+    this.clouds = []
+    while (this.clouds.length < 10) {
+      this.clouds.push(this.createCloud())
+    }
+  }
+
+  createCloud () {
+    var cloud = {x: this.randomX(), y: this.randomY(), width: this.cloudSize * 2, height: this.cloudSize}
+    if (!this.cloudCollision(cloud)) {
+      return cloud
+    } else {
+      return this.createCloud()
+    }
   }
 
   drawClouds () {
     var weather = this
     weather.context.globalAlpha = this.cloudDensity()
     weather.context.fillStyle = this.cloudColour()
-    for (var i = 0; i < weather.SKY_HEIGHT; i++) {
-      for (var j = 0; j < weather.SKY_WIDTH; j++) {
-        weather.drawOneCloud(i, j)
-      }
-    }
+    weather.clouds.forEach(function (cloud) {
+      weather.drawOneCloud(cloud)
+    })
   }
 
-  drawOneCloud (i, j) {
-    if (this.skyScape[i][j] === 0) {
-      this.context.fillRect(j * (this.cloudSize * 2),
-                               i * this.cloudSize,
-                               this.cloudSize * 2,
-                               this.cloudSize)
-    }
+  drawOneCloud (cloud) {
+    this.context.fillRect(cloud.x, cloud.y, cloud.width, cloud.height)
   }
 
   visibleSun () {
@@ -81,5 +73,23 @@ class Weather {
       return 0.8
     }
     return 0.2
+  }
+
+  cloudCollision (newCloud) {
+    return this.clouds.some(function (cloud) {
+      return newCloud.x < cloud.x + cloud.width &&
+         newCloud.x + newCloud.width > cloud.x &&
+         newCloud.y < cloud.y + cloud.height &&
+         newCloud.height + newCloud.y > cloud.y
+    })
+  }
+
+  randomX () {
+    return (Math.floor(Math.random() * (this.maxX - this.cloudSize)) - this.cloudSize)
+  }
+
+  randomY () {
+    var offset = (this.cloudSize / 2)
+    return (Math.floor(Math.random() * (this.maxY - offset)) - offset)
   }
 }
